@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>broadcast chan coolRooms, windowsOpen, windowsClose, enter, leave, timetableOn, timetableOff;</declaration>
+	<template>
+		<name>User</name>
+		<parameter>int &amp;r1_target_temperature, int  &amp;r2_target_temperature</parameter>
+		<declaration>clock t;</declaration>
+		<location id="id0" x="-459" y="34">
+			<name x="-469" y="0">home</name>
+			<label kind="invariant" x="-469" y="51">t &lt;= 10 * 60</label>
+		</location>
+		<location id="id1" x="-238" y="34">
+			<name x="-280" y="0">open_windows</name>
+			<label kind="invariant" x="-248" y="51">t &lt;= 12 * 60</label>
+		</location>
+		<location id="id2" x="0" y="34">
+			<name x="-10" y="0">close_windows</name>
+			<label kind="invariant" x="-10" y="51">t &lt;= 14 * 60</label>
+		</location>
+		<location id="id3" x="348" y="34">
+			<name x="338" y="0">disable_timetable</name>
+			<label kind="invariant" x="338" y="51">t &lt;= 18 * 60</label>
+		</location>
+		<location id="id4" x="646" y="34">
+			<name x="636" y="0">enable_timetable</name>
+			<label kind="invariant" x="636" y="51">t &lt;= 6 * 60 + 24 * 60</label>
+		</location>
+		<location id="id5" x="986" y="34">
+			<name x="976" y="0">not_home</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id6">
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="guard" x="790" y="17">t == 6 * 60 + 24 * 60</label>
+			<label kind="synchronisation" x="790" y="34">leave!</label>
+		</transition>
+		<transition id="id7">
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="guard" x="493" y="17">t == 18 * 60</label>
+			<label kind="synchronisation" x="493" y="34">timetableOn!</label>
+		</transition>
+		<transition id="id8">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="110" y="8">t == 14 * 60</label>
+			<label kind="synchronisation" x="110" y="34">timetableOff!</label>
+			<label kind="assignment" x="110" y="59">r1_target_temperature = 5,
+r2_target_temperature = 5</label>
+		</transition>
+		<transition id="id9">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-170" y="-8">t &gt;= 11 * 60 &amp;&amp;
+t &lt;= 12 * 60</label>
+			<label kind="synchronisation" x="-170" y="34">windowsClose!</label>
+		</transition>
+		<transition id="id10">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-408" y="-8">t &gt;= 9 * 60 &amp;&amp;
+t &lt;= 10 * 60</label>
+			<label kind="synchronisation" x="-408" y="34">windowsOpen!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Sensor</name>
+		<parameter>broadcast chan &amp;off, broadcast chan &amp;cool, broadcast chan &amp;heat, int &amp;target_temperature, int &amp;actual_temperature</parameter>
+		<declaration>clock t = 5;</declaration>
+		<location id="id11" x="0" y="0">
+			<label kind="invariant" x="-25" y="17">t &lt;= 5</label>
+		</location>
+		<init ref="id11"/>
+		<transition id="id12">
+			<source ref="id11"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-187" y="170">t==5 &amp;&amp; target_temperature == actual_temperature</label>
+			<label kind="synchronisation" x="-17" y="187">off!</label>
+			<label kind="assignment" x="-17" y="204">t=0</label>
+			<nail x="-102" y="170"/>
+			<nail x="102" y="170"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id11"/>
+			<target ref="id11"/>
+			<label kind="guard" x="170" y="-34">t==5 &amp;&amp; target_temperature &lt; actual_temperature</label>
+			<label kind="synchronisation" x="170" y="-17">cool!</label>
+			<label kind="assignment" x="170" y="0">t=0</label>
+			<nail x="170" y="-102"/>
+			<nail x="170" y="102"/>
+		</transition>
+		<transition id="id14">
+			<source ref="id11"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-569" y="-34">t==5 &amp;&amp; target_temperature &gt; actual_temperature</label>
+			<label kind="synchronisation" x="-212" y="-17">heat!</label>
+			<label kind="assignment" x="-195" y="0">t=0</label>
+			<nail x="-170" y="102"/>
+			<nail x="-170" y="-102"/>
+		</transition>
+	</template>
+	<template>
+		<name>Control</name>
+		<parameter>broadcast chan &amp;off, broadcast chan &amp;cool, broadcast chan &amp;heat, chan &amp;coolRoom, chan &amp;heatRoom</parameter>
+		<declaration>clock t;</declaration>
+		<location id="id15" x="0" y="0">
+			<name x="-8" y="-42">On</name>
+			<label kind="invariant" x="-34" y="17">t &lt;= 15</label>
+		</location>
+		<location id="id16" x="0" y="-204">
+			<name x="-42" y="-238">windows_open</name>
+		</location>
+		<location id="id17" x="-340" y="0">
+			<name x="-374" y="-34">too_hot</name>
+			<committed/>
+		</location>
+		<location id="id18" x="0" y="204">
+			<name x="17" y="196">correct_temp</name>
+			<committed/>
+		</location>
+		<location id="id19" x="340" y="0">
+			<name x="315" y="-34">too_cool</name>
+			<committed/>
+		</location>
+		<location id="id20" x="306" y="136">
+			<name x="289" y="153">do_nothing</name>
+			<label kind="comments" x="246" y="178">no sensor info available</label>
+			<committed/>
+		</location>
+		<location id="id21" x="0" y="-289">
+			<name x="-17" y="-323">left</name>
+		</location>
+		<init ref="id15"/>
+		<transition id="id22">
+			<source ref="id21"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-289" y="-306">enter?</label>
+			<label kind="assignment" x="-280" y="-289">t = 0</label>
+			<nail x="-238" y="-289"/>
+		</transition>
+		<transition id="id23">
+			<source ref="id15"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="238" y="-306">leave?</label>
+			<nail x="238" y="-289"/>
+		</transition>
+		<transition id="id24">
+			<source ref="id20"/>
+			<target ref="id15"/>
+			<label kind="assignment" x="212" y="136">t = 0</label>
+			<nail x="238" y="136"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id15"/>
+			<target ref="id20"/>
+			<label kind="guard" x="357" y="136">t == 15</label>
+			<nail x="374" y="136"/>
+		</transition>
+		<transition id="id26">
+			<source ref="id19"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="170" y="-136">heatRoom!</label>
+			<label kind="assignment" x="170" y="-119">t = 0</label>
+			<nail x="170" y="-102"/>
+		</transition>
+		<transition id="id27">
+			<source ref="id17"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-238" y="-136">coolRoom!</label>
+			<label kind="assignment" x="-238" y="-119">t=0</label>
+			<nail x="-170" y="-102"/>
+		</transition>
+		<transition id="id28">
+			<source ref="id16"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-145" y="-221">windowsClose?</label>
+			<label kind="assignment" x="-85" y="-204">t = 0</label>
+			<nail x="-34" y="-204"/>
+		</transition>
+		<transition id="id29">
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="34" y="-221">windowsOpen?</label>
+			<nail x="34" y="-204"/>
+		</transition>
+		<transition id="id30">
+			<source ref="id18"/>
+			<target ref="id15"/>
+			<label kind="assignment" x="-161" y="93">t = 0</label>
+			<nail x="-102" y="102"/>
+		</transition>
+		<transition id="id31">
+			<source ref="id15"/>
+			<target ref="id19"/>
+			<label kind="guard" x="144" y="0">10 &lt;= t &amp;&amp; t &lt;= 15</label>
+			<label kind="synchronisation" x="144" y="17">heat?</label>
+		</transition>
+		<transition id="id32" controllable="false">
+			<source ref="id15"/>
+			<target ref="id18"/>
+			<label kind="guard" x="8" y="93">10 &lt;= t &amp;&amp; t &lt;= 15</label>
+			<label kind="synchronisation" x="8" y="110">off?</label>
+		</transition>
+		<transition id="id33">
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-221" y="0">10 &lt;= t &amp;&amp; t &lt;= 15</label>
+			<label kind="synchronisation" x="-221" y="17">cool?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Room</name>
+		<parameter>int &amp;temperature, int &amp;other_room_temperature, chan &amp;coolRoom, chan &amp;heatRoom</parameter>
+		<declaration>clock t;
+</declaration>
+		<location id="id34" x="-102" y="-68">
+			<label kind="invariant" x="-178" y="-51">0 &lt; temperature &amp;&amp;
+6 &gt; temperature &amp;&amp;
+t &lt;= 60</label>
+		</location>
+		<location id="id35" x="-510" y="-68">
+			<name x="-612" y="-85">heating_up</name>
+			<committed/>
+		</location>
+		<location id="id36" x="306" y="-68">
+			<name x="323" y="-85">cooling_down</name>
+			<committed/>
+		</location>
+		<location id="id37" x="-102" y="204">
+			<name x="-93" y="178">thermal_imbalance</name>
+			<committed/>
+		</location>
+		<location id="id38" x="-102" y="102">
+			<name x="-93" y="76">checking_thermal_imbalance</name>
+			<committed/>
+		</location>
+		<init ref="id34"/>
+		<transition id="id39">
+			<source ref="id38"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-450" y="102">temperature == other_room_temperature</label>
+			<nail x="-442" y="102"/>
+			<nail x="-442" y="0"/>
+		</transition>
+		<transition id="id40">
+			<source ref="id38"/>
+			<target ref="id37"/>
+			<label kind="guard" x="-102" y="136">temperature != other_room_temperature</label>
+		</transition>
+		<transition id="id41">
+			<source ref="id34"/>
+			<target ref="id38"/>
+			<label kind="guard" x="-102" y="8">t &gt;= 30 &amp;&amp; t &lt;= 60</label>
+			<label kind="assignment" x="-102" y="34">t = 0</label>
+		</transition>
+		<transition id="id42">
+			<source ref="id37"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-484" y="178">temperature + 1 == other_room_temperature</label>
+			<nail x="-136" y="170"/>
+			<nail x="-476" y="170"/>
+			<nail x="-476" y="-34"/>
+		</transition>
+		<transition id="id43">
+			<source ref="id37"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-484" y="212">temperature + 1 &lt; other_room_temperature</label>
+			<nail x="-510" y="204"/>
+		</transition>
+		<transition id="id44">
+			<source ref="id37"/>
+			<target ref="id36"/>
+			<label kind="guard" x="-76" y="212">temperature &gt; other_room_temperature</label>
+			<nail x="306" y="204"/>
+		</transition>
+		<transition id="id45">
+			<source ref="id34"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="34" y="-51">coolRooms?</label>
+			<nail x="0" y="-34"/>
+			<nail x="170" y="-34"/>
+		</transition>
+		<transition id="id46">
+			<source ref="id36"/>
+			<target ref="id34"/>
+			<label kind="guard" x="34" y="-204">temperature == 1</label>
+			<nail x="204" y="-204"/>
+			<nail x="0" y="-204"/>
+		</transition>
+		<transition id="id47">
+			<source ref="id36"/>
+			<target ref="id34"/>
+			<label kind="guard" x="34" y="-153">temperature &gt; 1</label>
+			<label kind="assignment" x="34" y="-136">temperature -= 1</label>
+			<nail x="204" y="-136"/>
+			<nail x="0" y="-136"/>
+		</transition>
+		<transition id="id48">
+			<source ref="id34"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="34" y="-85">coolRoom?</label>
+		</transition>
+		<transition id="id49">
+			<source ref="id35"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-374" y="-204">temperature == 5</label>
+			<nail x="-408" y="-204"/>
+			<nail x="-204" y="-204"/>
+		</transition>
+		<transition id="id50">
+			<source ref="id35"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-374" y="-153">temperature &lt; 5</label>
+			<label kind="assignment" x="-374" y="-136">temperature += 1</label>
+			<nail x="-408" y="-136"/>
+			<nail x="-204" y="-136"/>
+		</transition>
+		<transition id="id51">
+			<source ref="id34"/>
+			<target ref="id35"/>
+			<label kind="synchronisation" x="-374" y="-85">heatRoom?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Windows</name>
+		<declaration>clock t, state_time;</declaration>
+		<location id="id52" x="0" y="0">
+			<name x="-17" y="-34">open</name>
+			<label kind="invariant" x="17" y="-8">t&lt;=10</label>
+		</location>
+		<location id="id53" x="-212" y="0">
+			<name x="-238" y="-34">closed</name>
+		</location>
+		<init ref="id53"/>
+		<transition id="id54">
+			<source ref="id53"/>
+			<target ref="id52"/>
+			<label kind="synchronisation" x="-204" y="17">windowsOpen?</label>
+			<label kind="assignment" x="-204" y="34">t = 0,
+state_time = 0</label>
+			<nail x="-110" y="17"/>
+		</transition>
+		<transition id="id55">
+			<source ref="id52"/>
+			<target ref="id53"/>
+			<label kind="synchronisation" x="-204" y="-76">windowsClose?</label>
+			<label kind="assignment" x="-204" y="-59">state_time = 0</label>
+			<nail x="-110" y="-34"/>
+		</transition>
+		<transition id="id56">
+			<source ref="id52"/>
+			<target ref="id52"/>
+			<label kind="guard" x="-68" y="161">5 &lt;= t &amp;&amp; t &lt;= 10</label>
+			<label kind="synchronisation" x="-68" y="178">coolRooms!</label>
+			<label kind="assignment" x="-68" y="195">t = 0</label>
+			<nail x="-77" y="162"/>
+			<nail x="76" y="161"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Timetable</name>
+		<parameter>int &amp;r1_target_temperatureeratur, int &amp;r2_target_temperatureeratur</parameter>
+		<declaration>clock t;</declaration>
+		<location id="id57" x="-272" y="34">
+			<name x="-282" y="0">time_0h_to_6h_OFF</name>
+			<label kind="invariant" x="-255" y="42">t &gt;= 0 * 60 &amp;&amp;
+t &lt;= 6 * 60</label>
+		</location>
+		<location id="id58" x="136" y="34">
+			<name x="119" y="0">time_6h_to_10h_OFF</name>
+			<label kind="invariant" x="144" y="42">t &gt;= 6 * 60 &amp;&amp;
+t &lt;= 10 * 60</label>
+		</location>
+		<location id="id59" x="544" y="34">
+			<name x="527" y="0">time_10h_to_18h_OFF</name>
+			<label kind="invariant" x="552" y="42">t &gt;=10 * 60 &amp;&amp;
+t &lt;= 18 * 60</label>
+		</location>
+		<location id="id60" x="952" y="34">
+			<name x="935" y="0">time_18h_to_24h_OFF</name>
+			<label kind="invariant" x="960" y="51">t &gt;= 18 * 60 &amp;&amp;
+t &lt;= 24 * 60</label>
+		</location>
+		<location id="id61" x="-272" y="-238">
+			<name x="-282" y="-272">time_0h_to_6h_ON</name>
+			<label kind="invariant" x="-263" y="-229">t &gt;= 0 &amp;&amp;
+t &lt;= 6 * 60</label>
+		</location>
+		<location id="id62" x="136" y="-238">
+			<name x="119" y="-272">time_6h_to_10h_ON</name>
+			<label kind="invariant" x="144" y="-229">t &gt;= 6 * 60 &amp;&amp;
+t &lt;= 10 * 60</label>
+		</location>
+		<location id="id63" x="544" y="-238">
+			<name x="527" y="-272">time_10h_to_18h_ON</name>
+			<label kind="invariant" x="552" y="-229">t &gt;= 10 * 60 &amp;&amp;
+t &lt;= 18 * 60</label>
+		</location>
+		<location id="id64" x="952" y="-238">
+			<name x="935" y="-272">time_18h_to_24h_ON</name>
+			<label kind="invariant" x="960" y="-229">t &gt;= 18 * 60 &amp;&amp;
+t &lt;= 24 * 60</label>
+		</location>
+		<init ref="id61"/>
+		<transition id="id65">
+			<source ref="id60"/>
+			<target ref="id64"/>
+			<label kind="synchronisation" x="1122" y="-119">timetableOn?</label>
+			<nail x="1122" y="-102"/>
+		</transition>
+		<transition id="id66">
+			<source ref="id59"/>
+			<target ref="id63"/>
+			<label kind="synchronisation" x="714" y="-119">timetableOn?</label>
+			<nail x="714" y="-102"/>
+		</transition>
+		<transition id="id67">
+			<source ref="id58"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="306" y="-119">timetableOn?</label>
+			<nail x="306" y="-102"/>
+		</transition>
+		<transition id="id68">
+			<source ref="id57"/>
+			<target ref="id61"/>
+			<label kind="synchronisation" x="-102" y="-119">timetableOn?</label>
+			<nail x="-102" y="-102"/>
+		</transition>
+		<transition id="id69">
+			<source ref="id64"/>
+			<target ref="id60"/>
+			<label kind="synchronisation" x="952" y="-119">timetableOff?</label>
+		</transition>
+		<transition id="id70">
+			<source ref="id63"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="544" y="-119">timetableOff?</label>
+		</transition>
+		<transition id="id71">
+			<source ref="id62"/>
+			<target ref="id58"/>
+			<label kind="synchronisation" x="136" y="-119">timetableOff?</label>
+		</transition>
+		<transition id="id72">
+			<source ref="id61"/>
+			<target ref="id57"/>
+			<label kind="synchronisation" x="-272" y="-119">timetableOff?</label>
+		</transition>
+		<transition id="id73">
+			<source ref="id64"/>
+			<target ref="id61"/>
+			<label kind="guard" x="272" y="-484">t == 24 * 60</label>
+			<label kind="assignment" x="272" y="-467">t = 0,
+r1_target_temperatureeratur = 3,
+r2_target_temperatureeratur = 4</label>
+			<nail x="323" y="-408"/>
+		</transition>
+		<transition id="id74">
+			<source ref="id60"/>
+			<target ref="id57"/>
+			<label kind="guard" x="272" y="238">t == 24 * 60</label>
+			<label kind="assignment" x="272" y="255">t = 0</label>
+			<nail x="323" y="238"/>
+		</transition>
+		<transition id="id75">
+			<source ref="id57"/>
+			<target ref="id58"/>
+		</transition>
+		<transition id="id76">
+			<source ref="id59"/>
+			<target ref="id60"/>
+		</transition>
+		<transition id="id77">
+			<source ref="id58"/>
+			<target ref="id59"/>
+		</transition>
+		<transition id="id78">
+			<source ref="id61"/>
+			<target ref="id62"/>
+			<label kind="assignment" x="-153" y="-280">r1_target_temperatureeratur = 1,
+r2_target_temperatureeratur = 2</label>
+		</transition>
+		<transition id="id79">
+			<source ref="id63"/>
+			<target ref="id64"/>
+			<label kind="assignment" x="663" y="-280">r1_target_temperatureeratur = 1,
+r2_target_temperatureeratur = 2</label>
+		</transition>
+		<transition id="id80">
+			<source ref="id62"/>
+			<target ref="id63"/>
+			<label kind="assignment" x="255" y="-280">r1_target_temperatureeratur = 3,
+r2_target_temperatureeratur = 4</label>
+		</transition>
+	</template>
+	<system>int r1_actual_temperature = 3;
+int r1_target_temperature = 3;
+int r2_actual_temperature = 4;
+int r2_target_temperature = 4;
+
+broadcast chan r1_off, r1_cool, r1_heat; // broadcast so they can be ignored if control not ready
+chan r1_coolRoom, r1_heatRoom;
+
+room1 = Room(r1_actual_temperature, r2_actual_temperature, r1_coolRoom, r1_heatRoom);
+control1 = Control(r1_off, r1_cool, r1_heat, r1_coolRoom, r1_heatRoom);
+sensor1 = Sensor(r1_off, r1_cool, r1_heat, r1_target_temperature, r1_actual_temperature);
+
+
+broadcast chan r2_off, r2_cool, r2_heat;
+chan r2_coolRoom, r2_heatRoom;
+
+room2 = Room(r2_actual_temperature, r1_actual_temperature, r2_coolRoom, r2_heatRoom);
+control2 = Control(r2_off, r2_cool, r2_heat, r2_coolRoom, r2_heatRoom);
+sensor2 = Sensor(r2_off, r2_cool, r2_heat, r2_target_temperature, r2_actual_temperature);
+
+
+timetable = Timetable(r1_target_temperature, r2_target_temperature);
+
+user = User(r1_target_temperature, r2_target_temperature);
+
+windows = Windows();
+
+system timetable, windows, user,
+    room1, control1, sensor1,
+    room2, control2, sensor2;
+</system>
+	<queries>
+		<query>
+			<formula>A[] (user.not_home imply (!control1.On &amp;&amp; !control2.On))
+</formula>
+			<comment>Wenn der Bewohner das Gebäude verlassen hat, sind beide Temperatursteuerungen ausgeschaltet.</comment>
+			<result outcome="success" type="quality" timestamp="2023-11-19 14:33:27 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; windows.open and windows.state_time &gt;= 1*60</formula>
+			<comment>Es ist möglich, dass die Fenster mindestens eine Stunde geöffnet sind</comment>
+			<result outcome="success" type="quality" timestamp="2023-11-19 15:02:28 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] (windows.open and windows.state_time &gt;= 1*60) imply (room1.temperature == 1 &amp;&amp; room2.temperature == 1)</formula>
+			<comment>Sind die Fenster mindestens eine Stunde lang geöffnet, beträgt die Temperatur in beiden Räumen Stufe 1</comment>
+			<result outcome="success" type="quality" timestamp="2023-11-19 04:54:35 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>user.disable_timetable --&gt; (room1.temperature == 5 &amp;&amp; room2.temperature == 5)</formula>
+			<comment>Wenn der Bewohner die Temperaturstufe 5 für beide Räume eingestellt hat, wird diese auch irgendwann von beiden Räumen erreicht.</comment>
+			<result outcome="success" type="quality" timestamp="2023-11-18 23:56:26 +0100">
+			</result>
+		</query>
+	</queries>
+</nta>
